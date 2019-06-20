@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +44,7 @@ public class SpringRedisGenericCache implements Level2Cache {
 	public void clear() {
 		Collection<String> keys = keys();
 		keys.stream().forEach(k -> {
-			redisTemplate.delete(this.region + ":" + k);
+			redisTemplate.delete(k);
 		});
 	}
 
@@ -67,7 +66,12 @@ public class SpringRedisGenericCache implements Level2Cache {
 
 	@Override
 	public Collection<String> keys() {
-		return redisTemplate.keys(this.region + ":*").stream().map(k->k.substring(this.region.length()+1)).collect(Collectors.toSet());
+		Set<String> list = redisTemplate.keys(this.region + ":*");
+		List<String> keys = new ArrayList<>(list.size());
+		for (String s : list) {
+			keys.add(s);
+		}
+		return keys;
 	}
 
 	@Override
