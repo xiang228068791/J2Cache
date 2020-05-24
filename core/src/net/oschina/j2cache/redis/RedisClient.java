@@ -198,9 +198,6 @@ public class RedisClient implements Closeable, AutoCloseable {
                     log.error("Failed to release jedis connection.", e);
                 }
             }
-            else
-                log.warn("Nothing to do while release redis client.");
-
             clients.remove();
         }
     }
