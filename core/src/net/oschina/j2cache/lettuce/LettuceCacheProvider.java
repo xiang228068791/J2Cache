@@ -15,36 +15,26 @@
  */
 package net.oschina.j2cache.lettuce;
 
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.pool2.impl.GenericObjectPool;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-
 import io.lettuce.core.AbstractRedisClient;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulConnection;
+import io.lettuce.core.cluster.ClusterClientOptions;
+import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.pubsub.RedisPubSubAdapter;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import io.lettuce.core.pubsub.api.async.RedisPubSubAsyncCommands;
 import io.lettuce.core.pubsub.api.sync.RedisPubSubCommands;
 import io.lettuce.core.support.ConnectionPoolSupport;
-import net.oschina.j2cache.Cache;
-import net.oschina.j2cache.CacheChannel;
-import net.oschina.j2cache.CacheExpiredListener;
-import net.oschina.j2cache.CacheObject;
-import net.oschina.j2cache.CacheProvider;
-import net.oschina.j2cache.CacheProviderHolder;
-import net.oschina.j2cache.Command;
-import net.oschina.j2cache.Level2Cache;
+import net.oschina.j2cache.*;
 import net.oschina.j2cache.cluster.ClusterPolicy;
+import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *  使用 Lettuce 进行 Redis 的操作
@@ -107,6 +97,7 @@ public class LettuceCacheProvider extends RedisPubSubAdapter<String, String> imp
         String password = props.getProperty("password");
         int database = Integer.parseInt(props.getProperty("database", "0"));
         String sentinelMasterId = props.getProperty("sentinelMasterId");
+        long clusterTopologyRefreshMs = Long.valueOf(props.getProperty("clusterTopologyRefresh", "3000"));
 
         if("redis-cluster".equalsIgnoreCase(scheme)) {
             scheme = "redis";
@@ -121,6 +112,15 @@ public class LettuceCacheProvider extends RedisPubSubAdapter<String, String> imp
             	redisURIs.add(uri);
             }
             redisClient = RedisClusterClient.create(redisURIs);
+            ClusterTopologyRefreshOptions topologyRefreshOptions = ClusterTopologyRefreshOptions.builder()
+                    //开启自适应刷新
+                    .enableAdaptiveRefreshTrigger(ClusterTopologyRefreshOptions.RefreshTrigger.MOVED_REDIRECT, ClusterTopologyRefreshOptions.RefreshTrigger.PERSISTENT_RECONNECTS)
+                    .enableAllAdaptiveRefreshTriggers()
+                    .adaptiveRefreshTriggersTimeout(Duration.ofMillis(clusterTopologyRefreshMs))
+                    //开启定时刷新,时间间隔根据实际情况修改
+                    .enablePeriodicRefresh(Duration.ofMillis(clusterTopologyRefreshMs))
+                    .build();
+            ((RedisClusterClient)redisClient).setOptions(ClusterClientOptions.builder().topologyRefreshOptions(topologyRefreshOptions).build());
         }
         else {
         	String[] redisArray = hosts.split(":");
