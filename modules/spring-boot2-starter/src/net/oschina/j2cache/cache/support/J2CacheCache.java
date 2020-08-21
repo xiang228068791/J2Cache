@@ -48,7 +48,7 @@ public class J2CacheCache extends AbstractValueAdaptingCache {
 	@Override
 	public synchronized <T> T get(Object key, Callable<T> valueLoader) {
 		ValueWrapper valueWrapper = this.get(key);
-		if(valueWrapper != null) {
+		if (valueWrapper != null) {
 			return (T) valueWrapper.get();
 		}
 
