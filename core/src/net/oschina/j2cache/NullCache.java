@@ -45,6 +45,10 @@ public class NullCache implements Level1Cache, Level2Cache {
 	public void put(String key, Object value) {
 	}
 
+    @Override
+    public void put(String key, Object value, long timeToLiveInSeconds) {
+    }
+
 	@Override
 	public Collection<String> keys() {
 		return Collections.emptyList();
