@@ -56,6 +56,7 @@ public class RabbitMQClusterPolicy implements ClusterPolicy, Consumer {
         factory.setPort(Integer.valueOf(props.getProperty("port", "5672")));
         factory.setUsername(props.getProperty("username" , null));
         factory.setPassword(props.getProperty("password" , null));
+        factory.setVirtualHost(props.getProperty("virtualHost"));
         //TODO 更多的 RabbitMQ 配置
     }
 
