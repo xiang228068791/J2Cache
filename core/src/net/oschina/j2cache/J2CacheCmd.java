@@ -15,8 +15,7 @@
  */
 package net.oschina.j2cache;
 
-import jline.console.ConsoleReader;
-
+import java.io.Console;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,13 +31,13 @@ public class J2CacheCmd {
 	public static void main(String[] args) throws IOException {
 
 		CacheChannel cache = J2Cache.getChannel(); //获取 J2Cache 操作接口
-		ConsoleReader reader = new ConsoleReader();
+		Console con = System.console();
 
 		String line;
 
 		do{
 			try {
-				line = reader.readLine("> ");
+				line = con.readLine("> ");
 
 				if(line == null || "quit".equalsIgnoreCase(line) || "exit".equalsIgnoreCase(line))
 					break;
@@ -131,7 +130,6 @@ public class J2CacheCmd {
 		}while(true);
 
 		cache.close();	//关闭 J2Cache 缓存
-		reader.shutdown();
 
 		System.exit(0);
 	}
